@@ -1,54 +1,84 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 
 type GameState = {
-  board: (string | null)[];
-  currentPlayer: string;
-  winner: string | null;
+  board: number[];
+  currentPlayer: number
+  winner: number | null;
 };
 
 const App = () => {
   const [state, setState] = useState<GameState>({
-    board: Array(9).fill(null),
-    currentPlayer: 'X',
+    board: Array(9).fill(0),
+    currentPlayer: 1,
     winner: null,
   });
 
   useEffect(() => {
     const result = calculateWinner(state.board);
-    if (result) {
+    if (result !== null) {
+      Alert.alert('Winner!', `${result === 1 ? 'X' : 'O'} has won the game!`, [
+        { text: 'Restart', onPress: resetGame },
+      ]);
       setState((prevState) => ({ ...prevState, winner: result }));
-      Alert.alert('Winner!', `${result} has won the game!`, [{ text: 'Restart', onPress: resetGame }]);
-    } else if (!state.board.includes(null)) {
-      Alert.alert('Draw!', 'The game is a draw.', [{ text: 'Restart', onPress: resetGame }]);
+    } else if (!state.board.includes(0)) {
+      Alert.alert('Draw!', 'The game is a draw.', [
+        { text: 'Restart', onPress: resetGame },
+      ]);
     }
   }, [state.board]);
+/* 
+const a = useMemo(()=>{
+   setState((prevState) => ({ ...prevState, winner: result }));
+})
 
-  const handlePress = (index: number) => {
-    if (state.board[index] || state.winner) return;
+let number;
+
+function fizzbuzz(number) {
+  if (number % 3 === 0 && number % 5 === 0) {
+    console.log('fizz buzz');
+  } else if (number % 3 === 0) {
+    console.log('fizz');
+  } else if (number % 5 === 0) {
+    console.log('buzz');
+  } else {
+    console.log('buzz buzz');
+  }
+}
+
+const fizzbuz = useCallback(() => {
+  fizzbuzz(15);
+}, []);
+*/
+const handlePress = (index: number) => {
+    if (state.board[index] !== 0 || state.winner !== null) return;
 
     const newBoard = state.board.map((value, idx) => (idx === index ? state.currentPlayer : value));
     setState((prevState) => ({
       ...prevState,
       board: newBoard,
-      currentPlayer: prevState.currentPlayer === 'X' ? 'O' : 'X',
+      currentPlayer: -prevState.currentPlayer,
     }));
   };
 
   const resetGame = () => {
-    setState({ board: Array(9).fill(null), currentPlayer: 'X', winner: null });
+    setState({ board: Array(9).fill(0), currentPlayer: 1, winner: null });
   };
 
-  const calculateWinner = (board: (string | null)[]): string | null => {
+  const calculateWinner = (board: number[]): number | null => {
     const patterns = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8],
       [0, 3, 6], [1, 4, 7], [2, 5, 8],
       [0, 4, 8], [2, 4, 6],
     ];
     for (let [a, b, c] of patterns) {
-      if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
+      if (board[a] !== 0 && board[a] === board[b] && board[a] === board[c]) return board[a];
     }
     return null;
+  };
+
+  const renderSquareValue = (value: number): string => {
+    return value === 1 ? 'X' : value === -1 ? 'O' : '';
   };
 
   return (
@@ -61,7 +91,7 @@ const App = () => {
             style={styles.square}
             onPress={() => handlePress(index)}
           >
-            <Text style={styles.squareText}>{value}</Text>
+            <Text style={styles.squareText}>{renderSquareValue(value)}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -115,3 +145,4 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+
